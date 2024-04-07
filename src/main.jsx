@@ -8,31 +8,34 @@ import Product from './pages/Product.jsx';
 import { CartProvider } from 'react-use-cart';
 import Bag from './pages/Bag.jsx';
 
-const router = createBrowserRouter([
-  {
-    path: "/market02",
-    element: <App />,
-    children: [
-      {
-        path: "/market02",
-        element: <Home />
-      },
-      {
-        path: "product/:id",
-        element: <Product />
-      },
-      {
-        path: "bag",
-        element: <Bag />
-      }
-    ]
-  }
-], {basename: "/"});
+const router = createBrowserRouter(
+  [
+    {
+      path: "/market02",
+      element: <App />,
+      children: [
+        {
+          path: "/market02",
+          element: <Home />,
+        },
+        {
+          path: "/market02/product/:id",
+          element: <Product />,
+        },
+        {
+          path: "/market02/bag",
+          element: <Bag />,
+        },
+      ],
+    },
+  ],
+  { basename: "/" }
+);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <CartProvider>
       <RouterProvider router={router} />
-    </CartProvider>    
+    </CartProvider>
   </React.StrictMode>,
 )

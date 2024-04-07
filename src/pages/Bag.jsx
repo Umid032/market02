@@ -37,11 +37,12 @@ const Bag = () => {
     })
 
     if (isEmpty) return (<h1>Is Empty</h1>);
+
     return (
-        <div className='Container'>{item}</div>
+        <div className='Container'>
+            {item}
+        </div>
     )
 }
 
-
-
-export default Bag
+export default Bag;

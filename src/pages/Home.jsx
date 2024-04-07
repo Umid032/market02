@@ -1,85 +1,99 @@
-import React, { Fragment, useState, useEffect } from 'react'
-import Cart from "../components/Cart"
-import axios from 'axios';
+import React, { Fragment, useState, useEffect, useReducer } from "react";
+import Cart from "../components/Cart";
+import axios from "axios";
+
+const reducer = (state, action) => {
+  switch (action?.type) {
+    case "GET":
+      return { ...state, products: action.products };
+    case "ERROR":
+      return { ...state, products: [] };
+    default:
+      throw new Error(`Unknown action ${action.type}`);
+  }
+};
 
 const Pagination = ({ productsPerPage, totalProducts, paginate }) => {
-    const array = [];
+  const array = [];
 
-    for (
-        let i = 1; i <= Math.ceil(totalProducts / productsPerPage); i++
-    ) {
-        array.push(i);
-    }
+  for (let i = 1; i <= Math.ceil(totalProducts / productsPerPage); i++) {
+    array.push(i);
+  }
 
-    return array.map(btn => {
-        return <button
-            className="pagination"
-            key={btn}
-            onClick={() => paginate(btn)}
-        >
-            {btn}
-        </button>
-    })
-}
+  return array.map((btn) => {
+    return (
+      <button className="pagination" key={btn} onClick={() => paginate(btn)}>
+        {btn}
+      </button>
+    );
+  });
+};
 
 const Home = () => {
-    const [Products, setProducts] = useState([]);
+  const [Products, setProducts] = useState([]);
+  const [state, dispatch] = useReducer(reducer, { products: [] });
 
-    useEffect(() => {
-        try {
-            axios.get(`http://localhost:9000/product`).then(res => {
-                const data = res.data;
-                setProducts(() => {
-                    return data && data.length ? [...data] : []
-                })
-            }).catch(error => console.error(error))
-        } catch (error) {
-            console.error(error.message);
-            setProducts([])
-        }
-    }, [Products.length]);
+  useEffect(() => {
+    try {
+      axios
+        .get(`http://localhost:9000/product`)
+        .then((res) => {
+          const data = res.data;
+          // setProducts(() => {
+          //     return data && data.length ? [...data] : []
+          // })
 
-    const [CurrentPage, setCurrentPage] = useState(1);
-    const [ProductsPerPage] = useState(3);
+          dispatch({ type: "GET", products: data });
+        })
+        .catch((error) => console.error(error));
+    } catch (error) {
+      console.error(error.message);
+      // setProducts([])
+      dispatch({ type: "ERROR" });
+    }
+  }, []);
 
-    const indexOfLastProduct = CurrentPage * ProductsPerPage;
-    const indexOfFirstProduct = indexOfLastProduct - ProductsPerPage;
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const [CurrentPage, setCurrentPage] = useState(1);
+  const [ProductsPerPage] = useState(3);
 
-    const product = Products
-        .slice(indexOfFirstProduct, indexOfLastProduct).map(item => {
-            return <Fragment key={item.id}>
-                <Cart
-                    id={item.id}
-                    price={item.price}
-                    title={item.title}
-                    image={item.image}
-                />
+  const indexOfLastProduct = CurrentPage * ProductsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - ProductsPerPage;
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-            </Fragment>
-        });
-
-    return (
-        <Fragment>
-            <section>
-                <div className="Container">
-                    <h2 className="title-2">Магазин</h2>
-
-                    <div className="main__row">
-                        {product}
-                    </div>
-
-                    <div className="main__paginations">
-                        <Pagination
-                            productsPerPage={ProductsPerPage}
-                            totalProducts={Products.length}
-                            paginate={paginate}
-                        />
-                    </div>
-                </div>
-            </section>
+  const product = state?.products
+    .slice(indexOfFirstProduct, indexOfLastProduct)
+    .map((item) => {
+      return (
+        <Fragment key={item.id}>
+          <Cart
+            id={item.id}
+            price={item.price}
+            title={item.title}
+            image={item.image}
+          />
         </Fragment>
-    )
-}
+      );
+    });
 
-export default Home
+  return (
+    <Fragment>
+      <section>
+        <div className="Container">
+          <h2 className="title-2">Магазин</h2>
+
+          <div className="main__row">{product}</div>
+
+          <div className="main__paginations">
+            <Pagination
+              productsPerPage={ProductsPerPage}
+              totalProducts={state?.products.length}
+              paginate={paginate}
+            />
+          </div>
+        </div>
+      </section>
+    </Fragment>
+  );
+};
+
+export default Home;
