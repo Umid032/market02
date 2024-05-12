@@ -1,142 +1,137 @@
-import React, { Fragment, useState, useEffect, useReducer } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
-import Cart from "../components/Cart"
-import axios from 'axios';
-import { useCart } from 'react-use-cart';
-
-const reducer = (state, action) => {
-    switch(action?.type){
-        case "GET":
-            return {...state, product: action?.product }
-        case "ERROR":
-            return {...state, product: {}, shortData: [] }
-        case "SHORT":
-            const array = action?.products.filter(item => {
-                return item.id != action?.paramsId || item?.id != action?.product?.id
-            }).slice(0, 3);
-
-            return {...state, ShortData: array }
-        default:
-            throw new Error(`Unknown action type ${action?.type}`)
-    }
-}
+import { Fragment, useEffect, useState, useContext } from "react";
+import Breadcrumb from "../components/Breadcrumb";
+import Container from "../components/container";
+import { Col, Flex, Image, Row, Select, Typography } from "antd";
+import Img from "../components/image";
+import Product3_1 from "../images/product3-0.png";
+import Product3_2 from "../images/product3-1.png";
+import Product3_3 from "../images/product3-2.png";
+import Title from "../components/Title";
+import { FaLocationDot } from "react-icons/fa6";
+import AlsoBuy from "../components/Also-buy";
+import { default as Btn } from "../components/Button";
+import axios from "axios";
+import { Context } from "../context";
+import { useParams } from "react-router-dom";
+import { useCart } from "react-use-cart";
+import { Helmet } from "react-helmet";
 
 const Product = () => {
-    const { id } = useParams();
+    const { APIUrl } = useContext(Context);
     const [Product, setProduct] = useState({});
-    const [ShortData, setShortData] = useState([]);
+    const { id } = useParams();
     const { addItem } = useCart();
-
-    const [state, dispatch] = useReducer(reducer, {product: {}, shortData: [], paramsId: id });
+    const [SizeProduct, setSizeProduct] = useState("");
 
     useEffect(() => {
         try {
-            axios.get(`http://localhost:9000/product/${id}`)
-                .then(response => {
-                    const data = response.data;
-                    // setProduct(data);
-                    dispatch({type: "GET", product: data})
-                })
-            axios.get(`http://localhost:9000/product`)
-                .then(response => {
-                    // setShortData([...response.data]);
-                    dispatch(
-                        {type: "SHORT", 
-                    products: [...response.data], 
-                    paramsId:id
-                })
-             })
+            axios.get(`${APIUrl}/products/${id}`).then(response => {
+                const data = response.data;
+                setProduct(() => data && data.id ? data : {})
+            })
         } catch (error) {
-            console.error(error?.message);
-            dispatch({type: "ERROR"});
+            alert(error?.message)
         }
-    }, [id, state?.product?.id, state.shortData?.length]);
+    }, [id, Product?.id]);
 
-    const handleClick = () => {
-        alert(`Товар: ${state.product?.title} добавлено в карзину`)
-        // console.log(Product);
-
-        addItem({ ...state?.product, quantity: 1 });
-
-        setTimeout(() => {
-            window.location.replace("/bag");
-        }, 500)
+    const handleProduct = () => {
+        if (SizeProduct === "") {
+            alert(`Товар ${Product.title} не выбран размер! ПЖ укажите размер товара.`)
+        } else {
+            alert(`Товар ${Product.title} добавлен в корзину`)
+            addItem({ ...Product, size: SizeProduct });
+        }
     }
 
-    const description = state?.product?.description?.map((text, id) => {
-        return (
-            <p key={id}>
-                {text}
-            </p>
-        )
-    })
+    return (
+        <Fragment>
+            <Helmet>
+                <title>Moody-{Product.title}</title>
+                <meta name="description" content={Product.description} />
+                <meta property="og:title" content={Product.title} /> 
+                <meta property="og:image" content={Product.image} /> 
+                <meta property="og:url" content={window.location.href} />
+            </Helmet>
+            <Breadcrumb current={Product.title} />
 
-    const shortItem =state?.shortData
-        .map(product => {
-            return (
-                <Fragment key={product.id}>
-                    <Cart
-                        price={product.price}
-                        id={product.id}
-                        image={product.image}
-                        title={product.title}
-                    />
-                </Fragment>
-            )
-        })
+            <section className="Product">
+                <Container>
+                    <Row className={`Product__row`}>
+                        <Col span={16} className="Product__data">
+                            <Row justify={"space-between"} className={`Product__data-images`}>
+                                <Col span={11}>
+                                    <Img className={`Product__imageholder`} src={Product.image} alt={`Checked Duvet Cover Set`} />
+                                </Col>
 
-    if (id)
-        return (
-          <Fragment>
-            <section>
-              <div className="Container">
-                <div className="main__row main__product-row">
-                  <div className="main__imageholder">
-                    <img src={state?.product.image} alt="error" />
-                  </div>
+                                <Col span={11}>
+                                    <Img className={`Product__imageholder`} src={Product.image} alt={`Checked Duvet Cover Set`} />
+                                </Col>
 
-                  <div className="main__content">
-                    <h2 className="title-2 main__title">
-                      {state?.product.title}
-                    </h2>
+                                <Col span={24}>
+                                    <Img className={`Product__imageholder`} src={Product.image} alt={`Checked Duvet Cover Set`} />
+                                </Col>
+                            </Row>
 
-                    <p className="price main__price">
-                      {state?.product.price}
-                      <small className="currency-price"> руб.</small>
-                    </p>
+                            <Row>
+                                <Col span={24} className={`Product__data-desc`}>
+                                    <Title bodyText={"p"} className={`Product__data-desc__title`}>
+                                        Conscious
+                                    </Title>
 
-                    <div className="main__button">
-                      <button
-                        onClick={handleClick}
-                        className="main__button-black"
-                      >
-                        Купить в один клик
-                      </button>
-                    </div>
+                                    <Title level={"h3"} className={`Product__data-desc__text`}>
+                                        Twin duvet cover set in soft, woven fabric made from a Tencel™lyocell and cotton blend with a printed pattern. One pillowcase. Thread count 144.
+                                    </Title>
 
-                    <div className="main__description">{description}</div>
+                                    <ul className={'list-none Product__data-desc__list '}>
+                                        <li className={`Product__data-desc__item`}>
+                                            <Flex>
+                                                Composition — <Title level={"h3"}> Cotton 50%, Lyocell 50%</Title>
+                                            </Flex>
+                                        </li>
 
-                    <div className="back">
-                      <Link to={"/market02"} className="back__link">
-                        Назад
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                                        <li className={`Product__data-desc__item`}>
+                                            <Flex>
+                                                Art. No. — <Title level={"h3"}> 0643448004</Title>
+                                            </Flex>
+                                        </li>
+                                    </ul>
+
+                                </Col>
+                            </Row>
+                        </Col>
+
+                        <Col span={7} className="Product__content">
+                            <Title level={"h2"}> {Product.title} </Title>
+
+                            <Typography.Title level={3}>{Product.price} $</Typography.Title>
+
+                            <Typography.Title level={3} className={`Product__content-desc`}>
+                                {Product.description}
+                            </Typography.Title>
+
+                            <Image src={Product.image} height={72} alt={Product.title} className={`Product__content-image`} />
+
+                            <Title level={"h3"} className={`Product__content-location`}> <FaLocationDot /> Not available in stores</Title>
+
+                            <Select
+                                options={Product.sizes}
+                                defaultValue={`select size`}
+                                className={`Product__content-select`}
+                                onChange={value => setSizeProduct(value)}
+                            />
+
+                            <div className="Product__content-buttons">
+                                <Btn primary onClick={handleProduct}>Add to shopping bag</Btn>
+                            </div>
+
+                        </Col>
+                    </Row>
+                </Container>
             </section>
 
-            <section className="also">
-              <div className="Container">
-                <h2 className="title-2">Смотрите также</h2>
-
-                <div className="also__row">{shortItem}</div>
-              </div>
-            </section>
-          </Fragment>
-        );
-
-    return (<h1>Is not defined</h1>)
+            <AlsoBuy />
+        </Fragment>
+    )
 }
 
-export default Product
+export default Product;
